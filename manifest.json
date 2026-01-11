@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "쿠팡 광고 감지기",
+  "name": "광고 감지기",
   "version": "2.0.0",
   "description": "검색 결과에서 제휴/광고 링크가 포함된 페이지를 미리 감지합니다.",
   "permissions": [
@@ -14,7 +14,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "쿠팡 광고 감지기",
+    "default_title": "광고 감지기",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
