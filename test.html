@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>쿠팡 링크 감지기 테스트 페이지</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-case {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f9f9f9;
+      border-left: 3px solid #007bff;
+    }
+    .test-case h3 {
+      margin-top: 0;
+      color: #007bff;
+      font-size: 16px;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      background: #333;
+      color: white;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 8px;
+    }
+    .expected {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 5px 10px 0;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #dynamic-content {
+      min-height: 50px;
+      border: 2px dashed #ccc;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧪 쿠팡 링크 감지기 테스트 페이지</h1>
+  <p>이 페이지는 Chrome 확장 프로그램을 테스트하기 위한 페이지입니다. 각 섹션에서 배지가 올바르게 표시되는지 확인하세요.</p>
+
+  <!-- Test Case 1: 쿠팡 링크만 (RED 배지만 표시) -->
+  <div class="section">
+    <h2>테스트 1: 쿠팡 링크 (🔴 RED 배지)</h2>
+
+    <div class="test-case">
+      <h3>1-1. coupang.com 링크</h3>
+      <p>
+        <a href="https://www.coupang.com/vp/products/123456">쿠팡 상품 링크</a>
+      </p>
+      <div class="expected">✅ 예상: 🔴 RED 배지 표시</div>
+    </div>
+
+    <div class="test-case">
+      <h3>1-2. link.coupang.com 링크</h3>
+      <p>
+        <a href="https://link.coupang.com/a/abcdef">쿠팡 파트너스 링크</a>
+      </p>
+      <div class="expected">✅ 예상: 🔴 RED 배지 표시</div>
+    </div>
+
+    <div class="test-case">
+      <h3>1-3. coupa.ng 단축 링크</h3>
+      <p>
+        <a href="https://coupa.ng/xyz123">쿠팡 단축 링크</a>
+      </p>
+      <div class="expected">✅ 예상: 🔴 RED 배지 표시</div>
+    </div>
+  </div>
+
+  <!-- Test Case 2: 고지 문구 + 외부 링크 (YELLOW 배지) -->
+  <div class="section">
+    <h2>테스트 2: 고지 문구 블록 내 외부 링크 (🟡 YELLOW 배지)</h2>
+
+    <div class="test-case">
+      <h3>2-1. "쿠팡 파트너스" 고지 문구</h3>
+      <p>
+        이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.
+        추천 상품: <a href="https://example.com/product1">제품 A</a>
+      </p>
+      <div class="expected">✅ 예상: 🟡 YELLOW 배지 표시 (외부 링크)</div>
+    </div>
+
+    <div class="test-case">
+      <h3>2-2. "제휴 활동" 고지 문구</h3>
+      <p>
+        본 포스팅은 제휴 활동으로 수수료를 제공받을 수 있습니다.
+        링크: <a href="https://partner-site.com/abc">파트너 사이트</a>
+      </p>
+      <div class="expected">✅ 예상: 🟡 YELLOW 배지 표시</div>
+    </div>
+
+    <div class="test-case">
+      <h3>2-3. "협찬" 고지 문구</h3>
+      <p>
+        이 글은 협찬을 받아 작성되었으며 대가를 제공받았습니다.
+        공식 사이트: <a href="https://sponsored-brand.com">브랜드 홈페이지</a>
+      </p>
+      <div class="expected">✅ 예상: 🟡 YELLOW 배지 표시</div>
+    </div>
+  </div>
+
+  <!-- Test Case 3: 내부 링크 (배지 없음) -->
+  <div class="section">
+    <h2>테스트 3: 내부 링크 (배지 없음)</h2>
+
+    <div class="test-case">
+      <h3>3-1. 고지 문구가 있지만 내부 링크</h3>
+      <p>
+        이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다.
+        관련글: <a href="/related-post">이전 포스트 보기</a>
+      </p>
+      <div class="expected">❌ 예상: 배지 없음 (내부 링크)</div>
+    </div>
+
+    <div class="test-case">
+      <h3>3-2. 같은 도메인 링크</h3>
+      <p>
+        제휴 활동으로 수수료를 받습니다.
+        <a href="http://127.0.0.1:5500/test.html">같은 페이지 링크</a>
+      </p>
+      <div class="expected">❌ 예상: 배지 없음 (같은 도메인)</div>
+    </div>
+  </div>
+
+  <!-- Test Case 4: 쿠팡 링크 + 고지 문구 (RED 배지만) -->
+  <div class="section">
+    <h2>테스트 4: 쿠팡 링크 + 고지 문구 (🔴 RED 배지만)</h2>
+
+    <div class="test-case">
+      <h3>4-1. 고지 문구 블록 내 쿠팡 링크</h3>
+      <p>
+        이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.
+        상품 보기: <a href="https://link.coupang.com/re/AFFSDP">쿠팡 노트북</a>
+      </p>
+      <div class="expected">✅ 예상: 🔴 RED 배지만 표시 (YELLOW 없음)</div>
+    </div>
+  </div>
+
+  <!-- Test Case 5: Footer 제외 (배지 없음) -->
+  <div class="section">
+    <h2>테스트 5: Footer 내 고지 문구 (배지 없음)</h2>
+    <p>본문의 외부 링크: <a href="https://external-site.com">외부 링크</a></p>
+    <div class="expected">❌ 예상: 배지 없음 (footer에 고지 문구가 있어도 본문 링크는 영향 없음)</div>
+  </div>
+
+  <!-- Test Case 6: 동적 콘텐츠 (MutationObserver 테스트) -->
+  <div class="section">
+    <h2>테스트 6: 동적 콘텐츠 추가 (MutationObserver)</h2>
+
+    <button id="add-coupang">쿠팡 링크 추가</button>
+    <button id="add-disclosure">고지 문구 블록 추가</button>
+    <button id="clear-dynamic">초기화</button>
+
+    <div id="dynamic-content">
+      <p><em>버튼을 클릭하여 동적으로 콘텐츠를 추가하세요.</em></p>
+    </div>
+  </div>
+
+  <!-- Test Case 7: 다양한 프로토콜 (배지 없음) -->
+  <div class="section">
+    <h2>테스트 7: 비 HTTP 프로토콜 (배지 없음)</h2>
+
+    <div class="test-case">
+      <h3>7-1. mailto, tel, javascript 링크</h3>
+      <p>
+        이메일: <a href="mailto:test@example.com">문의하기</a><br>
+        전화: <a href="tel:010-1234-5678">전화 걸기</a><br>
+        앵커: <a href="#top">맨 위로</a><br>
+        스크립트: <a href="javascript:alert('test')">클릭</a>
+      </p>
+      <div class="expected">❌ 예상: 모든 링크에 배지 없음</div>
+    </div>
+  </div>
+
+  <!-- Test Case 8: 짧은 텍스트 블록 제외 -->
+  <div class="section">
+    <h2>테스트 8: 짧은 텍스트 (배지 없음)</h2>
+
+    <div class="test-case">
+      <h3>8-1. 20자 미만 블록</h3>
+      <p>
+        쿠팡 파트너스 <a href="https://external.com">링크</a>
+      </p>
+      <div class="expected">❌ 예상: 배지 없음 (텍스트가 너무 짧음, 20자 미만)</div>
+    </div>
+  </div>
+
+  <!-- Test Case 9: 긴 텍스트 블록 제외 -->
+  <div class="section">
+    <h2>테스트 9: 긴 텍스트 블록 (배지 없음)</h2>
+
+    <div class="test-case">
+      <h3>9-1. 600자 초과 블록</h3>
+      <p>
+        이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        <a href="https://external-long.com">외부 링크</a>
+      </p>
+      <div class="expected">❌ 예상: 배지 없음 (텍스트가 600자 초과)</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.
+      외부 링크: <a href="https://footer-external.com">Footer 외부 링크</a>
+    </p>
+    <div class="expected" style="color: #ccc;">❌ 예상: Footer 내 링크는 배지 없음</div>
+  </footer>
+
+  <script>
+    // 동적 콘텐츠 추가 버튼 이벤트
+    document.getElementById('add-coupang').addEventListener('click', function() {
+      const container = document.getElementById('dynamic-content');
+      const newLink = document.createElement('p');
+      newLink.innerHTML = '동적으로 추가된 쿠팡 링크: <a href="https://coupa.ng/dynamic123">쿠팡 상품</a>';
+      container.appendChild(newLink);
+    });
+
+    document.getElementById('add-disclosure').addEventListener('click', function() {
+      const container = document.getElementById('dynamic-content');
+      const newBlock = document.createElement('p');
+      newBlock.innerHTML = '이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다. ' +
+                          '<a href="https://dynamic-external.com">동적 외부 링크</a>';
+      container.appendChild(newBlock);
+    });
+
+    document.getElementById('clear-dynamic').addEventListener('click', function() {
+      const container = document.getElementById('dynamic-content');
+      container.innerHTML = '<p><em>버튼을 클릭하여 동적으로 콘텐츠를 추가하세요.</em></p>';
+    });
+
+    // 무한 스크롤 시뮬레이션 (5초 후 자동 추가)
+    setTimeout(function() {
+      const section = document.querySelector('.section:last-of-type');
+      const autoAdded = document.createElement('div');
+      autoAdded.className = 'test-case';
+      autoAdded.innerHTML = `
+        <h3>자동 추가된 콘텐츠 (5초 후)</h3>
+        <p>
+          이 블록은 페이지 로드 5초 후 자동으로 추가되었습니다.
+          쿠팡 파트너스 활동으로 수수료를 받습니다.
+          <a href="https://auto-added-external.com">자동 추가 링크</a>
+        </p>
+        <div class="expected">✅ 예상: 🟡 YELLOW 배지 자동 표시</div>
+      `;
+      section.appendChild(autoAdded);
+      console.log('[Test] Auto-added content after 5 seconds');
+    }, 5000);
+  </script>
+
+</body>
+</html>
