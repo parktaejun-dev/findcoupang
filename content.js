@@ -4,6 +4,7 @@
 const DEFAULT_SETTINGS = {
   previewMode: false,
   badgeStyle: 'text', // 'text' | 'icon'
+  showClean: false,   // show "clean" badge for safe pages
   disabledDomains: []
 };
 
@@ -102,6 +103,11 @@ function getIconSvg(type) {
         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
         <line x1="12" y1="9" x2="12" y2="13"/>
         <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>`,
+
+    clean: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5"/>
       </svg>`
   };
   return svgs[type] || "";
@@ -161,6 +167,10 @@ function createBadge(state, resultStatus) {
       badge.innerHTML = getIconSvg("suspicious");
       badge.style.color = "#D97706";
       badge.title = "단축 URL 또는 우회 경로가 의심됩니다";
+    } else if (resultStatus === "CLEAN" && currentSettings.showClean) {
+      badge.innerHTML = getIconSvg("clean");
+      badge.style.color = "#16A34A";
+      badge.title = "광고 링크가 발견되지 않았습니다";
     } else {
       return null;
     }
@@ -195,6 +205,11 @@ function createBadge(state, resultStatus) {
       badge.style.color = "white";
       badge.textContent = "⚠️ 의심";
       badge.title = "단축 URL이 발견되었습니다";
+    } else if (resultStatus === "CLEAN" && currentSettings.showClean) {
+      badge.style.background = "#16A34A";
+      badge.style.color = "white";
+      badge.textContent = "✅ 안전";
+      badge.title = "광고 링크가 발견되지 않았습니다";
     } else {
       return null;
     }

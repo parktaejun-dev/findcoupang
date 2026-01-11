@@ -3,6 +3,7 @@
 const DEFAULT_SETTINGS = {
     previewMode: false,
     badgeStyle: 'text',
+    showClean: false,
     disabledDomains: []
 };
 
@@ -69,6 +70,7 @@ function updateStyleOptions(currentStyle) {
 document.addEventListener("DOMContentLoaded", async () => {
     const togglePreview = document.getElementById("togglePreview");
     const toggleSite = document.getElementById("toggleSite");
+    const toggleClean = document.getElementById("toggleClean");
     const styleOptions = document.querySelectorAll('.style-option');
 
     let settings = await loadSettings();
@@ -83,6 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Update UI
     togglePreview.checked = !!settings.previewMode;
+    toggleClean.checked = !!settings.showClean;
     updateStyleOptions(settings.badgeStyle || 'text');
 
     const isDisabled = (settings.disabledDomains || []).map(normalizeHost).includes(currentHost);
@@ -140,6 +143,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         settings.disabledDomains = list;
         await saveSettings(settings);
+    });
+
+    // Clean badge toggle
+    toggleClean.addEventListener("change", async () => {
+        settings = await loadSettings();
+        settings.showClean = toggleClean.checked;
+        await saveSettings(settings);
+        setStatus(toggleClean.checked ? "✅ 안전 배지 표시" : "⏸️ 안전 배지 숨김");
     });
 
     // Style options
