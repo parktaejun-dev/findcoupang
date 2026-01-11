@@ -1,0 +1,24 @@
+# Chrome Extension
+*.crx
+*.pem
+*.zip
+
+# Icons (optional, if generated)
+icons/*.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node modules (if added in future)
+node_modules/
+package-lock.json
