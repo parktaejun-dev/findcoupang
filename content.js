@@ -375,21 +375,33 @@ function findSerpLinks() {
     if (h3) candidates.add(a);
   });
 
-  // Naver - updated selectors for new UI
-  document.querySelectorAll('a[nocr], a.total_tit, a.api_txt_lines, a.link_tit, .total_wrap a[href]').forEach((a) => {
-    if (a && a.href) candidates.add(a);
+  // Naver - only blog article links, not navigation
+  document.querySelectorAll('a[href*="blog.naver.com"]').forEach((a) => {
+    if (!a || !a.href) return;
+    const text = (a.innerText || "").trim();
+    // Skip short text (navigation) and "더보기" type links
+    if (text.length < 10) return;
+    if (text.includes("더보기") || text.includes("전체보기")) return;
+    // Must be article URL (with logNo or /number)
+    const href = a.href;
+    if (href.includes("logNo=") || /\/\d{9,}/.test(href)) {
+      candidates.add(a);
+    }
   });
 
-  // Also check for blog.naver.com links directly
-  document.querySelectorAll('a[href*="blog.naver.com"]').forEach((a) => {
-    if (a && a.href && a.innerText.trim().length > 5) candidates.add(a);
+  // Tistory links
+  document.querySelectorAll('a[href*="tistory.com"]').forEach((a) => {
+    if (!a || !a.href) return;
+    const text = (a.innerText || "").trim();
+    if (text.length < 10) return;
+    if (/\/\d+$/.test(a.href)) candidates.add(a);
   });
 
   // Daum
   document.querySelectorAll('#mArticle a[href], .wrap_cont a[href]').forEach((a) => {
     if (!a || !a.href) return;
     const text = (a.textContent || "").trim();
-    if (text.length >= 5) candidates.add(a);
+    if (text.length >= 10) candidates.add(a);
   });
 
   // Bing
@@ -401,8 +413,11 @@ function findSerpLinks() {
 
   return Array.from(candidates).filter((a) => {
     const href = a.getAttribute("href") || "";
+    const text = (a.innerText || "").trim();
     if (href.startsWith("#")) return false;
     if (href.startsWith("javascript:")) return false;
+    // Skip navigation/utility links
+    if (text.includes("더보기") || text.includes("전체") || text.includes("펼쳐보기")) return false;
     return true;
   });
 }
