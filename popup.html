@@ -14,24 +14,24 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      width: 280px;
-      padding: 16px;
+      width: 220px;
+      padding: 12px;
       background: #fff;
     }
 
     .header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
     .header-icon {
-      font-size: 24px;
+      font-size: 18px;
     }
 
     .header h1 {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 600;
       color: #111;
     }
@@ -40,7 +40,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 0;
+      padding: 8px 0;
       border-bottom: 1px solid #f0f0f0;
     }
 
@@ -193,7 +193,7 @@
 <body>
   <div class="header">
     <span class="header-icon">🔍</span>
-    <h1>쿠팡 광고 감지기</h1>
+    <h1>광고 감지기</h1>
   </div>
 
   <div class="row">
@@ -232,7 +232,7 @@
   </div>
 
   <div class="row">
-    <span class="label">안전 배지 표시</span>
+    <span class="label">미감지 배지 표시</span>
     <label class="toggle">
       <input type="checkbox" id="toggleClean">
       <span class="toggle-slider"></span>
@@ -241,12 +241,7 @@
 
   <div id="status" class="status"></div>
 
-  <div class="hint">
-    미리보기 모드를 켜면 검색 결과를 클릭하기 전에 광고 링크 유무를 미리 확인할 수 있습니다.
-  </div>
-
   <div class="legend">
-    <div class="legend-title">배지 의미</div>
     <div class="legend-item"><span class="dot dot-red"></span> 광고</div>
     <div class="legend-item"><span class="dot dot-orange"></span> 의심</div>
     <div class="legend-item"><span class="dot" style="background:#16A34A"></span> 미감지</div>
