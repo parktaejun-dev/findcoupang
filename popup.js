@@ -2,6 +2,7 @@
 
 const DEFAULT_SETTINGS = {
     previewMode: false,
+    badgeStyle: 'text',
     disabledDomains: []
 };
 
@@ -54,9 +55,21 @@ async function hasAllHostsPermission() {
     });
 }
 
+function updateStyleOptions(currentStyle) {
+    document.querySelectorAll('.style-option').forEach((opt) => {
+        const style = opt.getAttribute('data-style');
+        if (style === currentStyle) {
+            opt.classList.add('active');
+        } else {
+            opt.classList.remove('active');
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     const togglePreview = document.getElementById("togglePreview");
     const toggleSite = document.getElementById("toggleSite");
+    const styleOptions = document.querySelectorAll('.style-option');
 
     let settings = await loadSettings();
     const perm = await hasAllHostsPermission();
@@ -70,6 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Update UI
     togglePreview.checked = !!settings.previewMode;
+    updateStyleOptions(settings.badgeStyle || 'text');
 
     const isDisabled = (settings.disabledDomains || []).map(normalizeHost).includes(currentHost);
     toggleSite.checked = !isDisabled;
@@ -85,7 +99,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         settings = await loadSettings();
 
         if (togglePreview.checked) {
-            // Request permission
             const granted = await requestAllHostsPermission();
             if (!granted) {
                 togglePreview.checked = false;
@@ -116,11 +129,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         let list = (settings.disabledDomains || []).map(normalizeHost);
 
         if (toggleSite.checked) {
-            // Enable on this site (remove from disabled list)
             list = list.filter((d) => d !== currentHost);
             setStatus(`✅ ${currentHost}에서 활성화`);
         } else {
-            // Disable on this site
             if (!list.includes(currentHost)) {
                 list.push(currentHost);
             }
@@ -129,5 +140,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         settings.disabledDomains = list;
         await saveSettings(settings);
+    });
+
+    // Style options
+    styleOptions.forEach((opt) => {
+        opt.addEventListener('click', async () => {
+            const style = opt.getAttribute('data-style');
+            settings = await loadSettings();
+            settings.badgeStyle = style;
+            await saveSettings(settings);
+            updateStyleOptions(style);
+            setStatus(`배지 스타일: ${style === 'icon' ? '아이콘' : '텍스트'} (새로고침 필요)`);
+        });
     });
 });

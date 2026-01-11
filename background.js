@@ -54,22 +54,15 @@ function normalizeUrl(rawUrl) {
 function scanHtmlForAffiliate(htmlText) {
   const html = htmlText.toLowerCase();
 
-  // 1. Definite affiliate domains (RED badge)
-  const definiteDomains = [
+  // 1. Coupang affiliate domains (RED badge)
+  const coupangDomains = [
     "coupa.ng",
     "link.coupang.com",
     "coupang.com/vp/products",
-    "partners.coupang.com",
-    "linkprice.com",
-    "linkprice.kr",
-    "adpick.co.kr",
-    "tenping.kr",
-    "clickmon.co.kr",
-    "dable.io",
-    "criteo.com"
+    "partners.coupang.com"
   ];
 
-  for (const d of definiteDomains) {
+  for (const d of coupangDomains) {
     if (html.includes(d)) return "DETECTED";
   }
 

@@ -3,6 +3,7 @@
 
 const DEFAULT_SETTINGS = {
   previewMode: false,
+  badgeStyle: 'text', // 'text' | 'icon'
   disabledDomains: []
 };
 
@@ -12,6 +13,8 @@ const HOVER_DELAY_MS = 300;
 const scannedAnchors = new WeakSet();
 const renderedAnchors = new WeakSet();
 const hoverTimers = new WeakMap();
+
+let currentSettings = { ...DEFAULT_SETTINGS };
 
 // ============================================================================
 // Utilities
@@ -44,7 +47,6 @@ function hasPathSignal(url) {
     const q = u.searchParams;
     const host = normalizeHost(u.hostname);
 
-    // Domain allow list (strong signals)
     const domainAllow = (
       host.includes("blog.naver.com") ||
       host.includes("post.naver.com") ||
@@ -54,7 +56,6 @@ function hasPathSignal(url) {
       host.endsWith("medium.com")
     );
 
-    // Path signals (generic content URLs)
     const pathSignals = (
       path.includes("/post/") ||
       path.includes("/entry/") ||
@@ -62,13 +63,10 @@ function hasPathSignal(url) {
       path.includes("/article/") ||
       path.includes("/blog/") ||
       path.includes("/p/") ||
-      /\/\d+$/.test(path) // ends with number (e.g., /123)
+      /\/\d+$/.test(path)
     );
 
-    // WordPress signal: ?p=123
     const wpSignal = q.has("p") && /^[0-9]+$/.test(q.get("p") || "");
-
-    // Must have meaningful path
     const hasMeaningfulPath = path.length > 1;
 
     return (domainAllow || pathSignals || wpSignal) && hasMeaningfulPath;
@@ -84,6 +82,47 @@ function shouldScan(url) {
 }
 
 // ============================================================================
+// SVG Icons
+// ============================================================================
+
+function getIconSvg(type) {
+  const svgs = {
+    analyzing: `
+      <svg class="adcheck-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+      </svg>`,
+
+    detected: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>`,
+
+    suspicious: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>`
+  };
+  return svgs[type] || "";
+}
+
+function injectStyles() {
+  if (document.getElementById("adcheck-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "adcheck-style";
+  style.textContent = `
+    @keyframes adcheck-spin { 
+      from { transform: rotate(0deg); } 
+      to { transform: rotate(360deg); } 
+    }
+    .adcheck-spin { animation: adcheck-spin 1s linear infinite; }
+  `;
+  document.head.appendChild(style);
+}
+
+// ============================================================================
 // Badge Creation
 // ============================================================================
 
@@ -91,39 +130,72 @@ function createBadge(state, resultStatus) {
   const badge = document.createElement("span");
   badge.setAttribute("data-adcheck-badge", "1");
 
-  // Reset styles
-  badge.style.cssText = `
-    all: unset;
-    display: inline-flex;
-    align-items: center;
-    margin-left: 6px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    vertical-align: middle;
-    white-space: nowrap;
-  `;
+  const isGoogle = window.location.hostname.includes("google");
+  const useIcon = currentSettings.badgeStyle === 'icon';
 
-  if (state === "analyzing") {
-    badge.style.background = "#9CA3AF";
-    badge.style.color = "white";
-    badge.textContent = "⏳ 분석중";
-    badge.title = "페이지를 분석하고 있습니다...";
+  if (useIcon) {
+    // Icon style
+    badge.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 6px;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      cursor: help;
+      ${isGoogle ? 'transform: scaleY(-1);' : ''}
+    `;
+
+    injectStyles();
+
+    if (state === "analyzing") {
+      badge.innerHTML = getIconSvg("analyzing");
+      badge.style.color = "#9CA3AF";
+      badge.title = "분석 중...";
+    } else if (resultStatus === "DETECTED") {
+      badge.innerHTML = getIconSvg("detected");
+      badge.style.color = "#DC2626";
+      badge.title = "광고/수익 링크가 발견되었습니다";
+    } else if (resultStatus === "SUSPICIOUS") {
+      badge.innerHTML = getIconSvg("suspicious");
+      badge.style.color = "#D97706";
+      badge.title = "단축 URL 또는 우회 경로가 의심됩니다";
+    } else {
+      return null;
+    }
   } else {
-    if (resultStatus === "DETECTED") {
+    // Text style (default)
+    badge.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      margin-left: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      vertical-align: middle;
+      white-space: nowrap;
+      ${isGoogle ? 'transform: scaleY(-1);' : ''}
+    `;
+
+    if (state === "analyzing") {
+      badge.style.background = "#9CA3AF";
+      badge.style.color = "white";
+      badge.textContent = "⏳ 분석중";
+      badge.title = "페이지를 분석하고 있습니다...";
+    } else if (resultStatus === "DETECTED") {
       badge.style.background = "#EF4444";
       badge.style.color = "white";
-      badge.textContent = "🚨 광고";
-      badge.title = "제휴/광고 링크가 발견되었습니다";
+      badge.textContent = "💰 광고";
+      badge.title = "쿠팡 파트너스 링크가 발견되었습니다";
     } else if (resultStatus === "SUSPICIOUS") {
       badge.style.background = "#F59E0B";
       badge.style.color = "white";
       badge.textContent = "⚠️ 의심";
-      badge.title = "단축 URL이 발견되었습니다 (광고일 수 있음)";
+      badge.title = "단축 URL이 발견되었습니다";
     } else {
-      // CLEAN - don't show badge
       return null;
     }
   }
@@ -131,28 +203,60 @@ function createBadge(state, resultStatus) {
   return badge;
 }
 
+// ============================================================================
+// Badge Insertion - Fixed positioning
+// ============================================================================
+
+function findInsertPoint(anchor) {
+  // For Google: find the h3 title and insert after it
+  const h3 = anchor.querySelector('h3');
+  if (h3) return { element: h3, position: 'afterend' };
+
+  // For Naver: insert after the anchor's text
+  return { element: anchor, position: 'beforeend' };
+}
+
 function ensureBadge(anchor) {
-  const next = anchor.nextElementSibling;
-  if (next && next.getAttribute("data-adcheck-badge") === "1") {
-    return next;
-  }
+  // Check if badge already exists
+  const existing = anchor.querySelector('[data-adcheck-badge]') ||
+    anchor.parentElement?.querySelector('[data-adcheck-badge]');
+  if (existing) return existing;
+
   const badge = createBadge("analyzing", null);
-  if (badge) anchor.insertAdjacentElement("afterend", badge);
+  if (!badge) return null;
+
+  const { element, position } = findInsertPoint(anchor);
+  element.insertAdjacentElement(position, badge);
   return badge;
 }
 
 function updateBadge(anchor, resultStatus) {
-  // Remove existing badge
-  const existing = anchor.nextElementSibling;
-  if (existing && existing.getAttribute("data-adcheck-badge") === "1") {
-    existing.remove();
+  // Remove existing badges
+  const existingInAnchor = anchor.querySelector('[data-adcheck-badge]');
+  const existingAfter = anchor.nextElementSibling;
+
+  if (existingInAnchor) existingInAnchor.remove();
+  if (existingAfter && existingAfter.getAttribute('data-adcheck-badge') === '1') {
+    existingAfter.remove();
   }
 
-  // Create new badge (or nothing if CLEAN)
-  const badge = createBadge("done", resultStatus);
-  if (badge) {
-    anchor.insertAdjacentElement("afterend", badge);
+  // Also check inside h3
+  const h3 = anchor.querySelector('h3');
+  if (h3) {
+    const badgeInH3 = h3.querySelector('[data-adcheck-badge]');
+    if (badgeInH3) badgeInH3.remove();
+    const badgeAfterH3 = h3.nextElementSibling;
+    if (badgeAfterH3 && badgeAfterH3.getAttribute('data-adcheck-badge') === '1') {
+      badgeAfterH3.remove();
+    }
   }
+
+  // Create new badge
+  const badge = createBadge("done", resultStatus);
+  if (!badge) return;
+
+  const { element, position } = findInsertPoint(anchor);
+  element.insertAdjacentElement(position, badge);
 }
 
 function removeAllBadges() {
@@ -165,7 +269,10 @@ function removeAllBadges() {
 
 async function getSettings() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(DEFAULT_SETTINGS, (items) => resolve(items || DEFAULT_SETTINGS));
+    chrome.storage.sync.get(DEFAULT_SETTINGS, (items) => {
+      currentSettings = items || DEFAULT_SETTINGS;
+      resolve(currentSettings);
+    });
   });
 }
 
@@ -243,7 +350,7 @@ function findSerpLinks() {
     if (a && a.href) candidates.add(a);
   });
 
-  // Also check for links in search result containers
+  // Google: links in search result containers
   document.querySelectorAll('[data-ved] a[href], .g a[href], #rso a[href]').forEach((a) => {
     if (!a || !a.href) return;
     const h3 = a.querySelector('h3');
@@ -269,7 +376,6 @@ function findSerpLinks() {
     if (h2) candidates.add(a);
   });
 
-  // Filter non-result links
   return Array.from(candidates).filter((a) => {
     const href = a.getAttribute("href") || "";
     if (href.startsWith("#")) return false;
@@ -284,10 +390,7 @@ function runScanner(settings) {
 
   console.log(`[Content] Found ${valid.length} scannable links`);
 
-  // Auto-scan top N
   valid.slice(0, TOP_N).forEach((a) => scheduleAnalyze(a));
-
-  // On-demand for all
   valid.forEach((a) => attachHoverTriggers(a));
 }
 
@@ -298,13 +401,11 @@ function runScanner(settings) {
 async function main() {
   const settings = await getSettings();
 
-  // If Preview Mode is OFF, do nothing
   if (!settings.previewMode) {
     console.log("[Content] Preview Mode is OFF");
     return;
   }
 
-  // If disabled on this site, do nothing
   if (isDisabledForThisSite(settings)) {
     console.log("[Content] Disabled on this site");
     return;
@@ -313,18 +414,22 @@ async function main() {
   console.log("[Content] Starting scanner...");
   runScanner(settings);
 
-  // Observe for dynamic content
   const mo = new MutationObserver(() => {
     runScanner(settings);
   });
   mo.observe(document.documentElement, { childList: true, subtree: true });
 
-  // React to settings changes
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync") return;
 
     if (changes.previewMode && changes.previewMode.newValue === false) {
       removeAllBadges();
+    }
+
+    // Reload settings for style changes
+    if (changes.badgeStyle) {
+      currentSettings.badgeStyle = changes.badgeStyle.newValue;
+      // Re-render would require page refresh for now
     }
   });
 }
